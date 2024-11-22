@@ -244,7 +244,7 @@ export const generatePNLImage = async (req: Request, res: Response) => {
         scanmeImageSource: scanmeDataURI,
       },
       puppeteerArgs: {
-        executablePath: "/snap/bin/chromium",
+        executablePath: "/usr/bin/chromium",
         args: ["--no-sandbox", "--disable-setuid-sandbox"],
       },
     })
