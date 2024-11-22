@@ -1,33 +1,45 @@
-import nodeHtmlToImage from 'node-html-to-image';
+import nodeHtmlToImage from "node-html-to-image";
 import QRCode from "qrcode";
-import { Request, Response } from 'express'
-import fs from 'fs';
+import { Request, Response } from "express";
+import fs from "fs";
 
 export const generatePNLImage = async (req: Request, res: Response) => {
   try {
-    const { chatId, pairTitle, boughtAmount, pnlValue, worth, profitPercent, burnAmount, isBuy, referralLink } = req.body;
+    const {
+      chatId,
+      pairTitle,
+      boughtAmount,
+      pnlValue,
+      worth,
+      profitPercent,
+      burnAmount,
+      isBuy,
+      referralLink,
+    } = req.body;
 
     const timestamp = (Date.now() / 1000).toFixed(0);
-    const imageId = `${chatId}-${timestamp}.png`
+    const imageId = `${chatId}-${timestamp}.png`;
 
-    const image = fs.readFileSync('./src/assets/pnlbg.png');
-    const base64Image = Buffer.from(image).toString('base64');
-    const dataURI = 'data:image/jpeg;base64,' + base64Image
+    console.log("🚀 ~ generatePNLImage ~ imageId:", imageId);
+    const image = fs.readFileSync("./src/assets/pnlbg.png");
+    const base64Image = Buffer.from(image).toString("base64");
+    const dataURI = "data:image/jpeg;base64," + base64Image;
 
-    const fireImage = fs.readFileSync('./src/assets/fire.png');
-    const fireBase64Image = Buffer.from(fireImage).toString('base64');
-    const fireDataURI = 'data:image/jpeg;base64,' + fireBase64Image;
+    const fireImage = fs.readFileSync("./src/assets/fire.png");
+    const fireBase64Image = Buffer.from(fireImage).toString("base64");
+    const fireDataURI = "data:image/jpeg;base64," + fireBase64Image;
 
-    const scanmeImage = fs.readFileSync('./src/assets/scanme.png');
-    const scanmeBase64Image = Buffer.from(scanmeImage).toString('base64');
-    const scanmeDataURI = 'data:image/jpeg;base64,' + scanmeBase64Image;
+    const scanmeImage = fs.readFileSync("./src/assets/scanme.png");
+    const scanmeBase64Image = Buffer.from(scanmeImage).toString("base64");
+    const scanmeDataURI = "data:image/jpeg;base64," + scanmeBase64Image;
 
     const result = await QRCode.toDataURL(referralLink, {
       color: {
         dark: "#7ED957FF",
-        light: "#FFBF6000"
-      }
+        light: "#FFBF6000",
+      },
     });
+    console.log("🚀 ~ generatePNLImage ~ QRCode:", QRCode);
 
     const HTMLCode = `
     <html>
@@ -112,7 +124,7 @@ export const generatePNLImage = async (req: Request, res: Response) => {
           color: #B647EE;
         }
         .percentage {
-          color: ${profitPercent < 0 ? '#F1473A' : '#7ED957'};
+          color: ${profitPercent < 0 ? "#F1473A" : "#7ED957"};
           font-size: 150px;
           font-weight: 600;
           width: 100%;
@@ -177,10 +189,16 @@ export const generatePNLImage = async (req: Request, res: Response) => {
           <div class="contents">
             <div class="contents-block">
               <div class="contents-body">
-                ${isBuy ? '<div class="trade-buy">Buy</div>' : '<div class="trade-sell">Sell</div>'}
+                ${
+                  isBuy
+                    ? '<div class="trade-buy">Buy</div>'
+                    : '<div class="trade-sell">Sell</div>'
+                }
                 <div class="bonk-sol">${pairTitle}</div>
                 <div class="bought-pl-worth">
-                  Bought: <span class="text-red">${boughtAmount ?? "0"} SOL</span>
+                  Bought: <span class="text-red">${
+                    boughtAmount ?? "0"
+                  } SOL</span>
                 </div>
                 <div class="bought-pl-worth">
                   P&amp;L: <span class="text-red">${pnlValue ?? ""}</span>
@@ -214,25 +232,30 @@ export const generatePNLImage = async (req: Request, res: Response) => {
         </div>
       </body>
     </html>
-    `
+    `;
 
-    await nodeHtmlToImage({
+    nodeHtmlToImage({
       output: `./src/assets/pnl/${imageId}`,
       html: HTMLCode,
       quality: 100,
       content: {
         imageSource: dataURI,
         fireImageSource: fireDataURI,
-        scanmeImageSource: scanmeDataURI
+        scanmeImageSource: scanmeDataURI,
       },
-      puppeteerArgs: { args: ['--no-sandbox'] }
-    });
-    // .then(() => console.log('The image was created successfully!'))
-    res.status(200).send({
-      pplUrl: `${req.protocol}://${req.get('host')}/assets/pnl/${imageId}`
+      puppeteerArgs: {
+        executablePath: "/snap/bin/chromium",
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      },
     })
+      .then(() => console.log("The image was created successfully!"))
+      .catch((err) => console.log("Image Create Error: ", err));
+    console.log(`${req.protocol}://${req.get("host")}/assets/pnl/${imageId}`);
+    res.status(200).send({
+      pplUrl: `${req.protocol}://${req.get("host")}/assets/pnl/${imageId}`,
+    });
   } catch (e) {
-    console.log(e);
+    console.log("error: ", e);
     return res.status(500).send({ msg: "Internal server error" });
   }
-}
+};
