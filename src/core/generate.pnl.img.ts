@@ -252,7 +252,7 @@ export const generatePNLImage = async (req: Request, res: Response) => {
       .catch((err) => console.log("Image Create Error: ", err));
     console.log(`${req.protocol}://${req.get("host")}/assets/pnl/${imageId}`);
     res.status(200).send({
-      pplUrl: `${req.protocol}://${req.get("host")}/assets/pnl/${imageId}`,
+      pplUrl: `https://${req.get("host")}/assets/pnl/${imageId}`,
     });
   } catch (e) {
     console.log("error: ", e);
